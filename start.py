@@ -1,20 +1,33 @@
+#!/usr/bin/python3
+
 import boto3
 import boto3.session
 import threading
-from . import config
+from config import Credentials
+import argparse
 
-def list():
+def session():
+    try:
+
+        sqs = boto3.client('sqs')
+        # sqs = boto3.Session(
+        #     aws_access_key_id=Credentials.aws_key_id,
+        #     aws_secret_access_key=Credentials.aws_access_key,
+        #     region_name='eu-west-1'
+        # ).resource('sqs')
+
+
+        return sqs
+
+    except:
+
+        return {"message": "Connection failed"}
+
+
+def list(sqs):
 
     try:
 
-        sqs = boto3.Session(
-            aws_access_key_id=config.Credentials.aws_key_id,
-            aws_secret_access_key=config.Credentials.aws_access_key,
-            region_name='eu-west-1'
-        ).resource('sqs')
-
-
-        queue_url = 'SQS_QUEUE_URL'
 
         # List SQS queues
         response = sqs.list_queues()
@@ -22,19 +35,65 @@ def list():
         print(response['QueueUrls'])
 
 
+
     except:
 
         return { "message" : "Listing failed" }
 
 
+def create(sqs):
+    try:
 
-# response = sqs.create_queue(
-        #     QueueName='TEST_SQS_QUEUE',
-        #     Attributes={
-        #         'Atribut_1': 'test1',
-        #         'Atribut_2': 'test2'
-        #     }
-        # )
+        queue_url = 'SQS_QUEUE_URL'
+
+        # Send message to SQS queue
+        response = sqs.send_message(
+            QueueUrl=queue_url,
+            DelaySeconds=10,
+            MessageAttributes={
+                'Title': {
+                    'DataType': 'String',
+                    'StringValue': 'The Whistler'
+                },
+                'Author': {
+                    'DataType': 'String',
+                    'StringValue': 'John Grisham'
+                },
+                'WeeksOn': {
+                    'DataType': 'Number',
+                    'StringValue': '6'
+                }
+            },
+            MessageBody=(
+                'Information about current NY Times fiction bestseller for '
+                'week of 12/11/2016.'
+            )
+        )
+
+        return(response['MessageId'])
+
+    except:
+
+        return {"message" : "Sending error" }
+
+def main():
+    try:
+
+        sqs = session()
+        print (sqs)
+
+        # response = create(sqs)
+        # print(response)
+        response = list(sqs)
+        print(response)
+
+    except:
+
+        print(response)
+
+if __name__ == '__main__':
+    main()
+
 
 
 
