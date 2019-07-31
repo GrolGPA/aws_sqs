@@ -1,114 +1,30 @@
 #!/usr/bin/python3
 
-import boto3
-import os
-from dotenv import load_dotenv
 from time import sleep
+from sqs import SQS
 import argparse
 
-def get_client():
-    try:
-
-        load_dotenv('.env')
-
-        sqs = boto3.client(
-        'sqs',
-        aws_access_key_id=os.environ.get('AWS_KEY_ID'),
-        aws_secret_access_key=os.environ.get('AWS_ACCESS_KEY'),
-        region_name=os.environ.get('REGION')
-        )
-
-        return sqs
-
-    except:
-
-        return {"message": "Connection failed"}
-
-
-def list(sqs):
-
-    try:
-
-
-        # List SQS queues
-        response = sqs.list_queues()
-
-        # return (response['QueueUrls'])
-        return response
-
-
-    except:
-
-        return { "message" : "Listing failed" }
-
-
-def pool(sqs):
-
-    try:
-
-        # Create a SQS queue with long polling enabled
-        response = sqs.create_queue(
-            QueueName='SQS_TEST_QUEUE',
-            Attributes={'ReceiveMessageWaitTimeSeconds': '20'}
-        )
-
-        return response['QueueUrl']
-
-    except:
-
-        return {"message" : "Pooling error"}
-
-
-def send_message(sqs, queue_url):
-    try:
-
-
-        response = sqs.send_message(MessageBody='TEST message')
-
-        return response
-
-    except:
-
-        return {"message" : "Sending error"}
-
-
-def get_queues(sqs, queue_url):
-    try:
-
-        response = sqs.receive_message(
-            QueueUrl=queue_url
-        )
-
-        # queue = sqs.get_queue_by_name(QueueName='SQS_TEST_QUEUE')
-        #
-        # queues = sqs.queues.all()
-
-        # for queue in messages:
-        #     print(queue.url)
-
-        # print(queue.url)
-        # print(queue.attributes.get('DelaySeconds'))
-
-        return response
-
-    except:
-
-        return {"message" : "Getting error"}
+# Before starting need copy ".env.sample" file to ".env" and write AWS credentials in it
 
 
 def main():
     try:
 
+        sqs = SQS()
+        sqs.pool()  # If not set queue name will be use the default name - "TEST_QUEUE"
+        sqs.send_message("TEST 222")    # You can set message body or message will be create with the default message body
 
-        sqs = get_client()
-
-        queue_url = pool(sqs)
 
         i = 1
-        while True:
+        # while True:
+        while i < 20:
 
-            print(get_queues(sqs, queue_url))
+            # Printing messages
+            print(sqs.get_queues())
+
             i += 1
+
+            # Starting background process after printing first message
             if i == 2:
 
                 print ("Pause for 1 minute")
@@ -120,7 +36,6 @@ def main():
                     t = t + 1
                     sleep(1)
                 print ("\nPause ended")
-
 
     except:
 
