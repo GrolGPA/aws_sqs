@@ -1,21 +1,22 @@
 #!/usr/bin/python3
 
 import boto3
-import boto3.session
 import threading
-from config import Credentials
+import os
+from dotenv import load_dotenv
 import argparse
 
 def session():
     try:
 
-        sqs = boto3.client('sqs')
-        # sqs = boto3.Session(
-        #     aws_access_key_id=Credentials.aws_key_id,
-        #     aws_secret_access_key=Credentials.aws_access_key,
-        #     region_name='eu-west-1'
-        # ).resource('sqs')
+        load_dotenv('.env')
 
+        sqs = boto3.client(
+        'sqs',
+        aws_access_key_id=os.environ.get('AWS_KEY_ID'),
+        aws_secret_access_key=os.environ.get('AWS_ACCESS_KEY'),
+        region_name=os.environ.get('REGION')
+        )
 
         return sqs
 
@@ -32,8 +33,8 @@ def list(sqs):
         # List SQS queues
         response = sqs.list_queues()
 
-        print(response['QueueUrls'])
-
+        # return (response['QueueUrls'])
+        return response
 
 
     except:
@@ -42,9 +43,26 @@ def list(sqs):
 
 
 def create(sqs):
+
     try:
 
-        queue_url = 'SQS_QUEUE_URL'
+        # Create a SQS queue with long polling enabled
+        response = sqs.create_queue(
+            QueueName='SQS_QUEUE_NAME',
+            Attributes={'ReceiveMessageWaitTimeSeconds': '20'}
+        )
+
+        return response['QueueUrl']
+
+    except:
+
+        return {"message" : "Pooling error"}
+
+
+def send(sqs, url):
+    try:
+
+        queue_url = 'url'
 
         # Send message to SQS queue
         response = sqs.send_message(
@@ -79,21 +97,28 @@ def create(sqs):
 def main():
     try:
 
-        sqs = session()
-        print (sqs)
 
-        # response = create(sqs)
-        # print(response)
-        response = list(sqs)
+        sqs = session()
+
+        QueueUrl = create(sqs)
+        print(QueueUrl)
+
+        urls = list(sqs)
+        print(urls)
+
+
+        response = create(sqs, QueueUrl)
         print(response)
+        #
+
+
 
     except:
 
-        print(response)
+        print("Error")
 
 if __name__ == '__main__':
     main()
-
 
 
 
