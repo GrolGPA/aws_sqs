@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 
 import boto3
-import threading
 import os
 from dotenv import load_dotenv
+from time import sleep
 import argparse
 
-def session():
+def get_client():
     try:
 
         load_dotenv('.env')
@@ -100,33 +100,31 @@ def main():
     try:
 
 
-        sqs = session()
+        sqs = get_client()
 
         queue_url = pool(sqs)
-        # print(queue_url)
 
-        messages = get_queues(sqs, queue_url)
-        print(messages)
+        i = 1
+        while True:
 
-        # queues = get_queues(sqs)
-        # for i in response:
-        #     print (response[i])
+            print(get_queues(sqs, queue_url))
+            i += 1
+            if i == 2:
 
+                print ("Pause for 1 minute")
 
-        # send_message(sqs, queue_url)
+                t = 1
+                while t < 5:
 
-
-
-        # urls = list(sqs)
-        # print(urls)
-
-        # message = get_message(sqs,queue_url)
-
+                    print ('.', sep=' ', end='', flush=True)
+                    t = t + 1
+                    sleep(1)
+                print ("\nPause ended")
 
 
     except:
 
-        print("Error")
+        return {"message": "Some error"}
 
 if __name__ == '__main__':
     main()
