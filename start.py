@@ -42,13 +42,13 @@ def list(sqs):
         return { "message" : "Listing failed" }
 
 
-def create(sqs):
+def pool(sqs):
 
     try:
 
         # Create a SQS queue with long polling enabled
         response = sqs.create_queue(
-            QueueName='SQS_QUEUE_NAME',
+            QueueName='SQS_TEST_QUEUE',
             Attributes={'ReceiveMessageWaitTimeSeconds': '20'}
         )
 
@@ -59,40 +59,42 @@ def create(sqs):
         return {"message" : "Pooling error"}
 
 
-def send(sqs, url):
+def send_message(sqs, queue_url):
     try:
 
-        queue_url = 'url'
 
-        # Send message to SQS queue
-        response = sqs.send_message(
-            QueueUrl=queue_url,
-            DelaySeconds=10,
-            MessageAttributes={
-                'Title': {
-                    'DataType': 'String',
-                    'StringValue': 'The Whistler'
-                },
-                'Author': {
-                    'DataType': 'String',
-                    'StringValue': 'John Grisham'
-                },
-                'WeeksOn': {
-                    'DataType': 'Number',
-                    'StringValue': '6'
-                }
-            },
-            MessageBody=(
-                'Information about current NY Times fiction bestseller for '
-                'week of 12/11/2016.'
-            )
-        )
+        response = sqs.send_message(MessageBody='TEST message')
 
-        return(response['MessageId'])
+        return response
 
     except:
 
-        return {"message" : "Sending error" }
+        return {"message" : "Sending error"}
+
+
+def get_queues(sqs, queue_url):
+    try:
+
+        response = sqs.receive_message(
+            QueueUrl=queue_url
+        )
+
+        # queue = sqs.get_queue_by_name(QueueName='SQS_TEST_QUEUE')
+        #
+        # queues = sqs.queues.all()
+
+        # for queue in messages:
+        #     print(queue.url)
+
+        # print(queue.url)
+        # print(queue.attributes.get('DelaySeconds'))
+
+        return response
+
+    except:
+
+        return {"message" : "Getting error"}
+
 
 def main():
     try:
@@ -100,16 +102,25 @@ def main():
 
         sqs = session()
 
-        QueueUrl = create(sqs)
-        print(QueueUrl)
+        queue_url = pool(sqs)
+        # print(queue_url)
 
-        urls = list(sqs)
-        print(urls)
+        messages = get_queues(sqs, queue_url)
+        print(messages)
+
+        # queues = get_queues(sqs)
+        # for i in response:
+        #     print (response[i])
 
 
-        response = create(sqs, QueueUrl)
-        print(response)
-        #
+        # send_message(sqs, queue_url)
+
+
+
+        # urls = list(sqs)
+        # print(urls)
+
+        # message = get_message(sqs,queue_url)
 
 
 
